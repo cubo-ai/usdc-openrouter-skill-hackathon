@@ -60,7 +60,7 @@ def main():
     
     if data.get("demo_mode"):
         print("\n⚠️  Demo Mode: Set OPENROUTER_API_KEY env var for real data")
-        print("   export OPENROUTER_API_KEY='sk-or-xxx'"
+        print("   export OPENROUTER_API_KEY='sk-or-xxx'")
 
 if __name__ == "__main__":
     main()

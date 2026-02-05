@@ -80,8 +80,6 @@ Credits are tracked both locally and via OpenRouter:
 - **Get Credits:** `GET /api/v1/credits` — Check remaining credits
 - **Buy Credits:** `POST /api/v1/credits/coinbase` — Pay with USDC
 
-See `references/openrouter_api.md` for full API details.
-
 ## Environment Variables
 
 Set these environment variables to enable real API calls (optional for hackathon demo):
