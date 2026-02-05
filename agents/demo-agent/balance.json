@@ -1,0 +1,8 @@
+{
+  "agent_id": "demo-agent",
+  "wallet_address": "0x90be30fa3c0fae3173d260d58bd1808426184d85",
+  "usdc_balance": 5.0,
+  "credits": 4999962,
+  "network": "base-sepolia",
+  "demo_mode": true
+}
