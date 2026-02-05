@@ -9,33 +9,36 @@ import os
 import sys
 from pathlib import Path
 
-TESTNET_MODE = True
-
 def get_openrouter_credits() -> dict:
     """
     Get OpenRouter credits balance.
-    In production, calls GET https://openrouter.ai/api/v1/credits
-    Requires provisioning API key.
+    Calls GET https://openrouter.ai/api/v1/credits
+    Requires OPENROUTER_API_KEY environment variable.
     """
     
-    if TESTNET_MODE:
-        # Return mock data
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    
+    if not api_key:
+        # Demo mode - return mock data
         return {
             "data": {
                 "total_credits": 10000000,  # $100.00
                 "total_usage": 2500000,     # $25.00 used
-                "remaining_credits": 7500000  # $75.00 remaining
+                "remaining_credits": 7500000,  # $75.00 remaining
+                "demo_mode": True
             }
         }
     
     # Production: Make actual API call
-    # import requests
-    # url = "https://openrouter.ai/api/v1/credits"
-    # headers = {
-    #     "Authorization": f"Bearer {os.getenv('OPENROUTER_PROVISIONING_KEY')}"
-    # }
-    # response = requests.get(url, headers=headers)
-    # return response.json()
+    import requests
+    url = "https://openrouter.ai/api/v1/credits"
+    headers = {
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    data["data"]["demo_mode"] = False
+    return data
 
 def format_credits(credits: int) -> str:
     """Format credits as dollars (1 credit = $0.0001)."""
@@ -55,8 +58,9 @@ def main():
     print("\n📚 To add credits:")
     print("   python3 scripts/buy_credits.py --agent-id <agent_id> --amount <usd>")
     
-    if TESTNET_MODE:
-        print("\n⚠️  Testnet Mode: Showing simulated data")
+    if data.get("demo_mode"):
+        print("\n⚠️  Demo Mode: Set OPENROUTER_API_KEY env var for real data")
+        print("   export OPENROUTER_API_KEY='sk-or-xxx'"
 
 if __name__ == "__main__":
     main()

@@ -9,8 +9,11 @@ import os
 import sys
 from pathlib import Path
 
-# Testnet mode - set to True for hackathon demo
-TESTNET_MODE = True
+def is_demo_mode() -> bool:
+    """Check if we're in demo mode (no real API key or private key)."""
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    private_key = os.getenv("AGENT_PRIVATE_KEY")
+    return not (api_key and private_key)
 
 def get_agent_dir(agent_id: str) -> Path:
     return Path(f"agents/{agent_id}")
@@ -29,11 +32,15 @@ def save_balance(agent_id: str, balance: dict):
 def create_coinbase_charge(agent_id: str, amount_usd: float, wallet_address: str) -> dict:
     """
     Create a Coinbase charge to buy OpenRouter credits.
-    In production, calls POST https://openrouter.ai/api/v1/credits/coinbase
+    Calls POST https://openrouter.ai/api/v1/credits/coinbase
+    Requires OPENROUTER_API_KEY and AGENT_PRIVATE_KEY env vars.
     """
     
-    if TESTNET_MODE:
-        # Simulate Coinbase charge creation
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    private_key = os.getenv("AGENT_PRIVATE_KEY")
+    
+    if not api_key or not private_key:
+        # Demo mode - simulate charge creation
         import uuid
         charge_id = f"charge_{uuid.uuid4().hex[:20]}"
         
@@ -42,6 +49,7 @@ def create_coinbase_charge(agent_id: str, amount_usd: float, wallet_address: str
                 "id": charge_id,
                 "created_at": "2024-06-01T12:00:00Z",
                 "expires_at": "2024-06-01T12:30:00Z",
+                "demo_mode": True,
                 "web3_data": {
                     "transfer_intent": {
                         "call_data": {
@@ -67,19 +75,21 @@ def create_coinbase_charge(agent_id: str, amount_usd: float, wallet_address: str
         }
     
     # Production: Make actual API call
-    # import requests
-    # url = "https://openrouter.ai/api/v1/credits/coinbase"
-    # payload = {
-    #     "amount": amount_usd,
-    #     "sender": wallet_address,
-    #     "chain_id": 84532  # Base Sepolia for testnet
-    # }
-    # headers = {
-    #     "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-    #     "Content-Type": "application/json"
-    # }
-    # response = requests.post(url, json=payload, headers=headers)
-    # return response.json()
+    import requests
+    url = "https://openrouter.ai/api/v1/credits/coinbase"
+    payload = {
+        "amount": amount_usd,
+        "sender": wallet_address,
+        "chain_id": 84532  # Base Sepolia for testnet
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    data = response.json()
+    data["data"]["demo_mode"] = False
+    return data
 
 def main():
     # Parse args
@@ -132,12 +142,17 @@ def main():
     charge_file = get_agent_dir(agent_id) / "pending_charge.json"
     charge_file.write_text(json.dumps(charge, indent=2))
     
-    print(f"\n📋 Next Steps:")
-    print(f"   1. Review charge saved to: {charge_file}")
-    print(f"   2. Execute payment: python3 scripts/execute_payment.py --agent-id {agent_id}")
-    print(f"   3. Or manually send USDC to: {call_data['recipient']}")
-    
-    print(f"\n⚠️  Testnet Mode: This is a simulated charge for demo purposes")
+    if data.get("demo_mode"):
+        print(f"\n⚠️  Demo Mode: Set env vars to execute real transactions")
+        print("   export OPENROUTER_API_KEY='sk-or-xxx'")
+        print("   export AGENT_PRIVATE_KEY='0x...'")
+        print(f"\n📋 Next Steps (Demo):")
+        print(f"   Review charge saved to: {charge_file}")
+    else:
+        print(f"\n📋 Next Steps:")
+        print(f"   1. Review charge saved to: {charge_file}")
+        print(f"   2. Execute payment: python3 scripts/execute_payment.py --agent-id {agent_id}")
+        print(f"   3. Or manually send USDC to: {call_data['recipient']}")
 
 if __name__ == "__main__":
     main()
