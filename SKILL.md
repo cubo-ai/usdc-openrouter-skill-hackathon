@@ -82,6 +82,37 @@ Credits are tracked both locally and via OpenRouter:
 
 See `references/openrouter_api.md` for full API details.
 
+## Environment Variables
+
+Set these environment variables to enable real API calls (optional for hackathon demo):
+
+```bash
+# Required for real OpenRouter API calls
+export OPENROUTER_API_KEY="sk-or-xxx"
+
+# Required for on-chain USDC transactions (testnet only)
+export AGENT_PRIVATE_KEY="0x..."
+```
+
+Or add to `~/.openclaw/openclaw.json`:
+```json
+{
+  "skills": {
+    "entries": {
+      "usdc-openrouter": {
+        "enabled": true,
+        "env": {
+          "OPENROUTER_API_KEY": "sk-or-xxx",
+          "AGENT_PRIVATE_KEY": "0x..."
+        }
+      }
+    }
+  }
+}
+```
+
+If not set, scripts run in demo mode with simulated responses.
+
 ## Testnet Resources
 
 - **Base Sepolia Faucet:** https://www.coinbase.com/faucets/base-sepolia-faucet
